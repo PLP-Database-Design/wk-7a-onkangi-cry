@@ -21,56 +21,67 @@
 
 -- Write an SQL query to transform this table into 2NF by removing partial dependencies. Ensure that each non-key column fully depends on the entire primary key.
 
-SCENARIO 1
 
 
-Products violates the First NF because mouse is redundant.
 
-  SOLUTION
-  1.We are creating a table with no redundant features in the products section
-  
-CREATE TABLE ProductDetail_1NF(
-  Order_ID  INT PRIMARY KEY,
-  customerName VARCHAR(255),
-  Products VARCHAR(255)
-  );
 
-INSERT INTO ProductDetail_1NF (ORDER_ID,CustomerName,Products) VALUES(
-  (101,	'John Doe',	'Laptop')
-  (101,	'John Doe'	, 'Mouse')
-  (102,	'Jane Smith',	'Tablet')
-  (102,	'Jane Smith', 'Keyboard')
-  (102,	'Jane Smith',	'Mouse')
-  (103,	'Emily Clark',	'Phone')
+--  FINAL CORRECTED SOLUTION ACCORDING TO INSTRUCTOR'S PREFERENCE
 
-SCENARIO 2
-  The problem is partial dependacies where customers's name depends in order Id which is directly related to products.
+--  QUESTION 1: Achieving 1NF (First Normal Form)
+-- Original table had multiple values in 'Products' column violating 1NF
+-- Transforming to ensure atomic values only, one product per row
 
-  SOLUTION
-  We have to remove the partial dependancy
-  A separate table for customer and another one which has directly linked orderId AND Products.
+-- Drop if exists to avoid conflict
+DROP TABLE IF EXISTS ProductDetail_1NF;
 
-  TABLE 1
-
-  CREATE TABLE Orders (
-    OrderID INT PRIMARY KEY,
-    CustomerName VARCHAR(255)
+-- Step 1: Create a 1NF-compliant table
+CREATE TABLE ProductDetail_1NF (
+    OrderID INT,
+    CustomerName VARCHAR(100),
+    Product VARCHAR(100)
 );
 
+-- Step 2: Insert atomic, non-repeating values
+INSERT INTO ProductDetail_1NF (OrderID, CustomerName, Product) VALUES
+(101, 'John Doe', 'Laptop'),
+(101, 'John Doe', 'Mouse'),
+(102, 'Jane Smith', 'Tablet'),
+(102, 'Jane Smith', 'Keyboard'),
+(102, 'Jane Smith', 'Mouse'),
+(103, 'Emily Clark', 'Phone');
+
+--  Now the table is in First Normal Form (1NF)
+
+
+--  QUESTION 2: Achieving 2NF (Second Normal Form)
+-- Remove partial dependencies: CustomerName depends only on OrderID, not on (OrderID, Product)
+
+-- Step 1: Drop tables if they exist to avoid conflicts
+DROP TABLE IF EXISTS Orders;
+DROP TABLE IF EXISTS OrderItems;
+
+-- Step 2: Create Orders table (CustomerName fully depends on OrderID)
+CREATE TABLE Orders (
+    OrderID INT PRIMARY KEY,
+    CustomerName VARCHAR(100)
+);
+
+-- Step 3: Create OrderItems table (Each entry tied to an order, with product and quantity)
+CREATE TABLE OrderItems (
+    OrderItemID INT PRIMARY KEY AUTO_INCREMENT,
+    OrderID INT,
+    Product VARCHAR(100),
+    Quantity INT,
+    FOREIGN KEY (OrderID) REFERENCES Orders(OrderID)
+);
+
+-- Step 4: Insert into Orders
 INSERT INTO Orders (OrderID, CustomerName) VALUES
 (101, 'John Doe'),
 (102, 'Jane Smith'),
 (103, 'Emily Clark');
 
-TABLE 2
-  
-  CREATE TABLE OrderItems (
-    OrderID INT,
-    Product VARCHAR(255),
-    Quantity INT,
-    FOREIGN KEY (OrderID) REFERENCES Orders(OrderID)
-);
-
+-- Step 5: Insert into OrderItems
 INSERT INTO OrderItems (OrderID, Product, Quantity) VALUES
 (101, 'Laptop', 2),
 (101, 'Mouse', 1),
@@ -78,4 +89,7 @@ INSERT INTO OrderItems (OrderID, Product, Quantity) VALUES
 (102, 'Keyboard', 1),
 (102, 'Mouse', 2),
 (103, 'Phone', 1);
+
+--  Now the data is in Second Normal Form (2NF) by separating partial dependencies.
+
 
